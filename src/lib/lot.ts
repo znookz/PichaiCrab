@@ -15,6 +15,9 @@ const MUST_BE_POSITIVE: NumKey[] = ['kg', 'crab', 'rate1', 'rate2'];
 
 export type LotInput = Record<NumKey, number> & { date: string };
 export type Lot = LotInput & { id: number };
+export type DefaultKey = 'rate1' | 'rate2' | 'vnFee' | 'thFee';
+export const DEFAULT_KEYS: DefaultKey[] = ['rate1', 'rate2', 'vnFee', 'thFee'];
+export type Defaults = Record<DefaultKey, number>;
 export type FieldErrors = Partial<Record<NumKey | 'date', string>>;
 
 // vnFee・thFee は kg あたり、rate1・rate2 は 1฿ あたりの VND

@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import type { Lot, LotInput } from './lot';
+import type { Defaults, Lot, LotInput } from './lot';
 
 type Row = {
   id: number;
@@ -37,12 +37,27 @@ export async function getLot(id: number): Promise<Lot | null> {
   return row ? toLot(row) : null;
 }
 
+export async function getDefaults(): Promise<Defaults | null> {
+  const row = await env.DB
+    .prepare('SELECT rate1, rate2, vn_fee, th_fee FROM settings WHERE id = 1')
+    .first<{ rate1: number; rate2: number; vn_fee: number; th_fee: number }>();
+  return row ? { rate1: row.rate1, rate2: row.rate2, vnFee: row.vn_fee, thFee: row.th_fee } : null;
+}
+
+// 新規保存のときだけ初期値を更新する(編集では更新しない)。ロットと同一バッチで実行
 export async function insertLot(v: LotInput): Promise<number> {
-  const r = await env.DB
-    .prepare('INSERT INTO lots (date, kg, crab, vn_fee, rate1, th_fee, rate2) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    .bind(...values(v))
-    .run();
-  return r.meta.last_row_id;
+  const [inserted] = await env.DB.batch([
+    env.DB
+      .prepare('INSERT INTO lots (date, kg, crab, vn_fee, rate1, th_fee, rate2) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .bind(...values(v)),
+    env.DB
+      .prepare(
+        `INSERT INTO settings (id, rate1, rate2, vn_fee, th_fee) VALUES (1, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET rate1 = excluded.rate1, rate2 = excluded.rate2, vn_fee = excluded.vn_fee, th_fee = excluded.th_fee`,
+      )
+      .bind(v.rate1, v.rate2, v.vnFee, v.thFee),
+  ]);
+  return inserted.meta.last_row_id;
 }
 
 export async function updateLot(id: number, v: LotInput): Promise<boolean> {

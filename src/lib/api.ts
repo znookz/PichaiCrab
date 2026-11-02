@@ -1,4 +1,4 @@
-import type { FieldErrors, Lot, LotInput } from './lot';
+import type { Defaults, FieldErrors, Lot, LotInput } from './lot';
 
 export async function fetchLots(): Promise<Lot[]> {
   const res = await fetch('/api/lots');
@@ -8,6 +8,11 @@ export async function fetchLots(): Promise<Lot[]> {
 
 export async function fetchLot(id: number): Promise<Lot | null> {
   const res = await fetch(`/api/lots/${id}`);
+  return res.ok ? res.json() : null;
+}
+
+export async function fetchDefaults(): Promise<Defaults | null> {
+  const res = await fetch('/api/defaults');
   return res.ok ? res.json() : null;
 }
 

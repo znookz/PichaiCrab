@@ -1,6 +1,6 @@
-import { fetchLot, saveLot } from '../lib/api';
+import { fetchDefaults, fetchLot, saveLot } from '../lib/api';
 import { fmt0, fmt2, fmtDate, fmtInput, fmtV, iso, parseNum, profitColor, sgn } from '../lib/format';
-import { calcLot, validateNumbers, type LotCalc, type NumKey } from '../lib/lot';
+import { calcLot, DEFAULT_KEYS, validateNumbers, type Defaults, type LotCalc, type NumKey } from '../lib/lot';
 import { say } from '../lib/toast';
 
 // 画面上の並び順。最初のエラー欄へフォーカスするのに使う
@@ -24,6 +24,15 @@ let stale = false;
 let attempted = false;
 let editingId: number | null = null;
 let saving = false;
+let defaults: Defaults | null = null;
+
+// onlyEmpty が true のときは、入力済みの欄を上書きしない
+function applyDefaults(onlyEmpty: boolean) {
+  if (!defaults) return;
+  for (const k of DEFAULT_KEYS) {
+    if (!onlyEmpty || f[k] === '') f[k] = fmtInput(String(defaults[k]), !INTEGER_KEYS.includes(k));
+  }
+}
 
 const numbers = () => Object.fromEntries(FIELD_ORDER.map((k) => [k, parseNum(f[k])])) as Record<NumKey, number>;
 
@@ -139,8 +148,11 @@ function doCalc() {
   render();
 }
 
-function resetAfterSave() {
+// 初期値は新規保存のときだけ更新する。編集のときは保存済みの初期値に戻す
+function resetAfterSave(saved: Defaults | null) {
+  if (saved) defaults = saved;
   f = { ...f, kg: '', crab: '' };
+  applyDefaults(false);
   calc = null;
   stale = false;
   attempted = false;
@@ -155,10 +167,11 @@ async function doSave() {
   saving = true;
   render();
   const wasEditing = editingId !== null;
+  const input = calc.input;
   try {
-    const result = await saveLot({ ...calc.input, date: f.date }, editingId);
+    const result = await saveLot({ ...input, date: f.date }, editingId);
     if (result.ok) {
-      resetAfterSave();
+      resetAfterSave(wasEditing ? null : { rate1: input.rate1, rate2: input.rate2, vnFee: input.vnFee, thFee: input.thFee });
       say(wasEditing ? 'อัปเดตล็อตเรียบร้อย' : 'บันทึกล็อตเรียบร้อย');
     } else {
       say('บันทึกไม่สำเร็จ ตรวจข้อมูลแล้วลองใหม่');
@@ -174,6 +187,7 @@ async function doSave() {
 
 function cancelEdit() {
   f = { ...f, kg: '', crab: '' };
+  applyDefaults(false);
   calc = null;
   stale = false;
   attempted = false;
@@ -247,6 +261,18 @@ $('btn-calc').addEventListener('click', doCalc);
 $('btn-save').addEventListener('click', doSave);
 $('cancel-edit').addEventListener('click', cancelEdit);
 
+async function init() {
+  const editing = new URLSearchParams(location.search).has('edit');
+  // 編集中は既存ロットの値を使うので、初期値は先に読み込むだけにする
+  defaults = await fetchDefaults().catch(() => null);
+  if (editing) {
+    await loadEditTarget();
+  } else {
+    applyDefaults(true);
+    render();
+  }
+}
+
 setupJumpNav();
 render();
-loadEditTarget();
+init();

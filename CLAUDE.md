@@ -29,6 +29,7 @@ Ledger for a middleman importing crab from Vietnam and selling it in Thailand. O
 - `net = crab - vnFee*kg`; `thbConv = crab / rate1`; `billed = thbConv + thFee*kg`; `transfer = net / rate2`; `profit = billed - transfer`.
 - Profit breakdown (sums exactly to profit): `vnFee*kg / rate2` + `thFee*kg` + `crab/rate1 - crab/rate2`.
 - Round only for display. Sanity case: crab 100,000,000, vnFee 3,000, kg 1,000, rate1 750, rate2 762, thFee 5 gives profit 11,036.75.
+- Defaults (rate1, rate2, vnFee, thFee) live in the single-row `settings` table and prefill the record form. They are updated only when a NEW lot is saved (same D1 batch as the insert), never when an existing lot is edited. After an edit or cancel the form returns to the stored defaults.
 - Validation lives in `validateNumbers` and runs on both client and server. Keep them in sync by editing only that function.
 
 ## Conventions
