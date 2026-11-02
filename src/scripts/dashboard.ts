@@ -5,9 +5,7 @@ import { enrichLot, type EnrichedLot } from '../lib/lot';
 
 type Period = '7' | 'month' | '90' | 'all';
 
-const WIDE_MIN_PX = 768;
-const CHART_W_WIDE = 640;
-const CHART_W_NARROW = 340;
+const MIN_CHART_W = 280;
 const CHART_H = 220;
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -60,7 +58,8 @@ function render() {
     )
     .join('');
 
-  const W = window.innerWidth >= WIDE_MIN_PX ? CHART_W_WIDE : CHART_W_NARROW;
+  // 表示領域の実幅に合わせて描画する(viewBox 幅 = 実幅で文字サイズを一定に保つ)
+  const W = Math.max(Math.round($('chart-bar').clientWidth), MIN_CHART_W);
   for (const [id, svg] of [
     ['chart-bar', barChartSvg(rows, W)],
     ['chart-line', lineChartSvg(rows, W)],
@@ -78,13 +77,12 @@ document.querySelectorAll<HTMLButtonElement>('[data-period]').forEach((b) =>
   }),
 );
 
-let wasWide = window.innerWidth >= WIDE_MIN_PX;
+let resizeFrame = 0;
 window.addEventListener('resize', () => {
-  const wide = window.innerWidth >= WIDE_MIN_PX;
-  if (wide !== wasWide) {
-    wasWide = wide;
+  cancelAnimationFrame(resizeFrame);
+  resizeFrame = requestAnimationFrame(() => {
     if (all.length) render();
-  }
+  });
 });
 
 async function load() {

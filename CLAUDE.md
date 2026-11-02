@@ -33,4 +33,5 @@ Ledger for a middleman importing crab from Vietnam and selling it in Thailand. O
 
 ## Conventions
 - UI strings in Thai. Code comments and `console.error` messages in Japanese. Keep comments sparse.
+- Breakpoints: under 768px mobile (bottom tab bar, cards); 768-1023px tablet (bottom tab bar, table); 1024px and up desktop (left sidebar, record page in 2 columns with sticky result, 4 KPI cards, charts side by side). Desktop rules sit at the end of `global.css`. Chart width is measured from the DOM, never hard-coded.
 - Colors, spacing and font sizes are CSS custom properties in `src/styles/global.css`; dark mode via `prefers-color-scheme`.

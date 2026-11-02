@@ -77,8 +77,9 @@ const breakdown = [
     </div>
   </nav>
 
-  <div class="stack">
-    <section class="card stack" aria-label="ข้อมูลทั่วไป">
+  <div class="record-grid">
+    <div class="col-form">
+    <section class="card stack span-all" aria-label="ข้อมูลทั่วไป">
       <div class="field">
         <label for="f-date" style="font-weight:600">วันที่</label>
         <input id="f-date" class="date-input" type="date" />
@@ -120,7 +121,9 @@ const breakdown = [
         </section>
       ))
     }
+    </div>
 
+    <div class="col-side">
     <section id="s-res" class="result" aria-labelledby="res-h">
       <p id="stale-badge" class="stale-badge" role="status" hidden>ข้อมูลเปลี่ยน กดคำนวณใหม่</p>
       <div class="dimmable" id="res-body">
@@ -149,6 +152,7 @@ const breakdown = [
     <div class="actions">
       <button type="button" id="btn-calc" class="btn btn-lg btn-calc">คำนวณ</button>
       <button type="button" id="btn-save" class="btn btn-lg btn-coral" disabled>บันทึก</button>
+    </div>
     </div>
   </div>
 </Layout>
