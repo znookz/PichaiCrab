@@ -1,0 +1,158 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+type Row =
+  | { kind: 'input'; key: string; label: string; suffix: string; hint?: string }
+  | { kind: 'calc'; key: string; label: string; suffix: string; hint?: string };
+
+const sections: { letter: string; title: string; rows: Row[] }[] = [
+  {
+    letter: '0',
+    title: 'ค่าตั้งต้น (ไม่ค่อยเปลี่ยน)',
+    rows: [
+      { kind: 'input', key: 'rate1', label: 'เรทเงินเวียดนาม 1 (₫ ต่อ 1 ฿)', suffix: '₫/฿' },
+      { kind: 'input', key: 'rate2', label: 'เรทเงินเวียดนาม 2 (₫ ต่อ 1 ฿)', suffix: '₫/฿' },
+      { kind: 'input', key: 'vnFee', label: 'ค่าดำเนินการฝั่งเวียดนาม (₫ ต่อ กก.)', suffix: '₫/กก.', hint: 'คิดเป็นยอดรวม = ต่อ กก. × จำนวนกก.' },
+      { kind: 'input', key: 'thFee', label: 'ค่าดำเนินการฝั่งไทย (฿ ต่อ กก.)', suffix: '฿/กก.', hint: 'รายได้ที่บวกในบิลลูกค้า ไม่ใช่ต้นทุน คิดรวม = ต่อ กก. × จำนวนกก.' },
+    ],
+  },
+  {
+    letter: 'A',
+    title: 'ฝั่งเวียดนาม (VND)',
+    rows: [
+      { kind: 'input', key: 'kg', label: 'จำนวนปูทั้งหมด (กก.)', suffix: 'กก.' },
+      { kind: 'input', key: 'crab', label: 'ค่าปูฝั่งเวียดนามทั้งหมด (₫)', suffix: '₫' },
+      { kind: 'calc', key: 'net', label: 'รวมค่าปู − ค่าดำเนินการ (₫)', suffix: '₫', hint: 'ไว้จ่ายคู่ค้าเวียดนามตอนท้าย' },
+    ],
+  },
+  {
+    letter: 'B',
+    title: 'คิดฝั่งไทย (เรทที่ 1)',
+    rows: [
+      { kind: 'calc', key: 'thbConv', label: 'คิดเป็นเงินไทย (฿)', suffix: '฿', hint: 'คิดจากค่าปูเท่านั้น ไม่รวมค่าดำเนินการเวียดนาม' },
+      { kind: 'calc', key: 'billed', label: 'รวมค่าปู + ค่าดำเนินการไทย (฿)', suffix: '฿', hint: 'ยอดที่เก็บเงินลูกค้า' },
+    ],
+  },
+  {
+    letter: 'C',
+    title: 'จ่ายเวียดนาม (เรทที่ 2)',
+    rows: [
+      { kind: 'calc', key: 'transfer', label: 'ยอดที่ต้องโอนเป็นเงินไทย (฿)', suffix: '฿', hint: '(ค่าปู − ค่าดำเนินการ) ÷ เรท 2' },
+    ],
+  },
+];
+
+const jumps = [
+  { key: '0', label: 'ตั้งต้น' },
+  { key: 'A', label: 'A' },
+  { key: 'B', label: 'B' },
+  { key: 'C', label: 'C' },
+  { key: 'res', label: 'สรุป' },
+];
+
+const breakdown = [
+  { id: 'a', label: '1. ค่าดำเนินการเวียดนาม' },
+  { id: 'b', label: '2. ค่าดำเนินการไทย' },
+  { id: 'c', label: '3. ส่วนต่างเรท' },
+];
+---
+
+<Layout title="บันทึกล็อตนำเข้า" page="record">
+  <h1 class="page-title">บันทึกล็อตนำเข้า</h1>
+
+  <div id="edit-banner" class="edit-banner" hidden>
+    <span>กำลังแก้ไขล็อตวันที่ <span id="edit-date"></span></span>
+    <button type="button" id="cancel-edit" class="btn">ยกเลิก</button>
+  </div>
+
+  <nav class="jump" aria-label="ไปยังส่วนของฟอร์ม">
+    <div>
+      {
+        jumps.map((j) => (
+          <button type="button" class={`pill${j.label.length > 2 ? ' wide' : ''}`} data-jump={j.key} aria-current="false">
+            {j.label}
+          </button>
+        ))
+      }
+    </div>
+  </nav>
+
+  <div class="stack">
+    <section class="card stack" aria-label="ข้อมูลทั่วไป">
+      <div class="field">
+        <label for="f-date" style="font-weight:600">วันที่</label>
+        <input id="f-date" class="date-input" type="date" />
+      </div>
+    </section>
+
+    {
+      sections.map((sec) => (
+        <section id={`s-${sec.letter}`} class="card" aria-labelledby={`sec-${sec.letter}`}>
+          <header class="sec-head">
+            <span class="sec-letter" aria-hidden="true">{sec.letter}</span>
+            <h2 id={`sec-${sec.letter}`}>{sec.title}</h2>
+          </header>
+          <div class="stack">
+            {sec.rows.map((row) => (
+              <div class="field">
+                <div class="field-head">
+                  <label for={`f-${row.key}`}>{row.label}</label>
+                  {row.kind === 'calc' && <span class="badge-calc">คำนวณอัตโนมัติ</span>}
+                </div>
+                {row.kind === 'input' ? (
+                  <>
+                    <div class="input-box" data-box={row.key}>
+                      <input id={`f-${row.key}`} type="text" inputmode="decimal" autocomplete="off" placeholder="0" aria-invalid="false" />
+                      <span class="suffix" aria-hidden="true">{row.suffix}</span>
+                    </div>
+                    <p class="err" id={`err-${row.key}`} role="alert" hidden></p>
+                  </>
+                ) : (
+                  <div class="calc-box dimmable">
+                    <output id={`f-${row.key}`}>—</output>
+                    <span class="suffix" aria-hidden="true">{row.suffix}</span>
+                  </div>
+                )}
+                {row.hint && <p class="hint">{row.hint}</p>}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+
+    <section id="s-res" class="result" aria-labelledby="res-h">
+      <p id="stale-badge" class="stale-badge" role="status" hidden>ข้อมูลเปลี่ยน กดคำนวณใหม่</p>
+      <div class="dimmable" id="res-body">
+        <h2 id="res-h">สรุปกำไรส่วนต่างล็อตนี้ (฿)</h2>
+        <p class="result-profit" id="res-profit">—</p>
+        <dl>
+          {
+            breakdown.map((b) => (
+              <div>
+                <dt>{b.label}</dt>
+                <dd id={`res-${b.id}`}>
+                  —<small id={`res-${b.id}k`}></small>
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+        <div class="result-sum">
+          <div><span>ค่าดำเนินการรวม (1 + 2)</span><span id="res-ab">—</span></div>
+          <div><span>น้ำหนักปู</span><span id="res-kg">—</span></div>
+          <div><span>กำไรรวมต่อกก.</span><span id="res-pk">—</span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button type="button" id="btn-calc" class="btn btn-lg btn-calc">คำนวณ</button>
+      <button type="button" id="btn-save" class="btn btn-lg btn-coral" disabled>บันทึก</button>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import '../scripts/record';
+</script>

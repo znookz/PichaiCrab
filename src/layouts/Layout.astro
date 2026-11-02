@@ -1,0 +1,67 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  page: 'record' | 'dash' | 'raw';
+}
+
+const { title, page } = Astro.props;
+const tabs = [
+  { key: 'record', href: '/', label: 'บันทึก' },
+  { key: 'dash', href: '/dashboard', label: 'แดชบอร์ด' },
+  { key: 'raw', href: '/data', label: 'ข้อมูลดิบ' },
+] as const;
+---
+
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{title} · Crab Ledger</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <main class={`is-${page}`}>
+      <slot />
+    </main>
+
+    <nav class="tabbar" aria-label="เมนูหลัก">
+      <div>
+        {
+          tabs.map((t) => (
+            <a href={t.href} aria-current={t.key === page ? 'page' : undefined}>
+              {t.key === 'record' && (
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                  <rect x="4" y="4" width="16" height="16" rx="3" />
+                  <path d="M12 8v8M8 12h8" />
+                </svg>
+              )}
+              {t.key === 'dash' && (
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                  <path d="M5 20V11M12 20V5M19 20v-6" />
+                </svg>
+              )}
+              {t.key === 'raw' && (
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                  <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+                  <path d="M3.5 10h17M9.5 10v9.5" />
+                </svg>
+              )}
+              {t.label}
+            </a>
+          ))
+        }
+      </div>
+    </nav>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

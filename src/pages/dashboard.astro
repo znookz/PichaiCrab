@@ -1,0 +1,73 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const periods = [
+  { key: '7', label: '7 วัน' },
+  { key: 'month', label: 'เดือนนี้' },
+  { key: '90', label: '3 เดือน' },
+  { key: 'all', label: 'ทั้งหมด' },
+];
+---
+
+<Layout title="แดชบอร์ด" page="dash">
+  <h1 class="page-title">แดชบอร์ด</h1>
+
+  <div class="chips" role="group" aria-label="ช่วงเวลา">
+    {periods.map((p) => <button type="button" class="pill" data-period={p.key} aria-pressed="false">{p.label}</button>)}
+  </div>
+
+  <div id="loading" aria-busy="true" aria-label="กำลังโหลด" class="stack" style="gap:var(--s3)">
+    <div class="kpis">
+      <div class="skeleton" style="height:92px"></div>
+      <div class="skeleton" style="height:92px"></div>
+      <div class="skeleton" style="height:92px"></div>
+      <div class="skeleton" style="height:92px"></div>
+    </div>
+    <div class="skeleton" style="height:260px"></div>
+    <div class="skeleton" style="height:260px"></div>
+  </div>
+
+  <div id="load-error" class="empty" hidden>
+    <p class="title">โหลดข้อมูลไม่สำเร็จ</p>
+    <p class="sub">ตรวจอินเทอร์เน็ตแล้วลองรีเฟรชหน้านี้</p>
+  </div>
+
+  <div id="empty" class="empty with-icon" hidden>
+    <div class="icon" aria-hidden="true"></div>
+    <p class="title">ยังไม่มีล็อตในช่วงนี้</p>
+    <p class="sub">เลือกช่วงเวลาอื่น หรือบันทึกล็อตใหม่</p>
+    <a href="/" class="btn btn-coral" style="display:inline-flex;align-items:center;text-decoration:none">ไปหน้าบันทึก</a>
+  </div>
+
+  <div id="content" class="stack" hidden>
+    <div id="kpis" class="kpis"></div>
+
+    <section class="card" aria-labelledby="c1-h">
+      <h2 id="c1-h" class="chart-title">กำไรต่อล็อต (฿)</h2>
+      <div class="legend">
+        <span><span class="swatch" aria-hidden="true" style="background:var(--pos)"></span>กำไร</span>
+        <span><span class="swatch" aria-hidden="true" style="background:var(--neg)"></span>ขาดทุน (เครื่องหมาย −)</span>
+      </div>
+      <svg id="chart-bar" class="chart" role="img" aria-label="กราฟแท่งกำไรต่อล็อต"></svg>
+    </section>
+
+    <section class="card" aria-labelledby="c2-h">
+      <h2 id="c2-h" class="chart-title">เรท 1 เทียบเรท 2 (₫ ต่อ 1 ฿)</h2>
+      <div class="legend">
+        <span>
+          <svg width="26" height="12" aria-hidden="true"><line x1="0" y1="6" x2="26" y2="6" style="stroke:var(--teal)" stroke-width="2.5"></line><circle cx="13" cy="6" r="4" style="fill:var(--teal)"></circle></svg>
+          เรท 1 (เส้นทึบ ●)
+        </span>
+        <span>
+          <svg width="26" height="12" aria-hidden="true"><line x1="0" y1="6" x2="26" y2="6" style="stroke:var(--coral)" stroke-width="2.5" stroke-dasharray="5 3"></line><rect x="9" y="2" width="8" height="8" style="fill:var(--coral)"></rect></svg>
+          เรท 2 (เส้นประ ■)
+        </span>
+      </div>
+      <svg id="chart-line" class="chart" role="img" aria-label="กราฟเส้นเรท 1 เทียบเรท 2"></svg>
+    </section>
+  </div>
+</Layout>
+
+<script>
+  import '../scripts/dashboard';
+</script>

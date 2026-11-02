@@ -1,0 +1,91 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="ข้อมูลดิบ" page="raw">
+  <div class="raw-head">
+    <h1 class="page-title">ข้อมูลดิบ</h1>
+    <button type="button" id="export-csv" class="btn btn-outline">ส่งออก CSV</button>
+  </div>
+
+  <div class="filters">
+    <div class="field">
+      <label for="d-from">ตั้งแต่วันที่</label>
+      <input id="d-from" class="date-input" type="date" />
+    </div>
+    <div class="field">
+      <label for="d-to">ถึงวันที่</label>
+      <input id="d-to" class="date-input" type="date" />
+    </div>
+  </div>
+  <p id="range-err" class="err range-err" role="alert" hidden>วันที่เริ่มต้องไม่เกินวันสิ้นสุด</p>
+
+  <p id="loading" class="hint" aria-busy="true">กำลังโหลด…</p>
+
+  <div id="load-error" class="empty" hidden>
+    <p class="title">โหลดข้อมูลไม่สำเร็จ</p>
+    <p class="sub">ตรวจอินเทอร์เน็ตแล้วลองรีเฟรชหน้านี้</p>
+  </div>
+
+  <div id="raw-empty" class="empty" hidden>
+    <p class="title">ไม่พบข้อมูลที่ตรงกับตัวกรอง</p>
+    <p class="sub">ลองเปลี่ยนช่วงวันที่</p>
+  </div>
+
+  <div id="cards-view" hidden>
+    <div id="cards" class="lot-cards"></div>
+    <div class="summary">
+      <div class="title" id="sum-title"></div>
+      <div class="grid">
+        <span>น้ำหนักรวม</span><span id="sum-kg"></span>
+        <span>ยอดเก็บลูกค้ารวม</span><span id="sum-billed"></span>
+        <span>ยอดโอนรวม</span><span id="sum-transfer"></span>
+        <span class="total">กำไรรวม</span><span id="sum-profit" class="total"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="table-view" class="table-wrap" hidden>
+    <table>
+      <caption>ตารางล็อตนำเข้า</caption>
+      <thead><tr id="thead-row"></tr></thead>
+      <tbody id="tbody"></tbody>
+      <tfoot><tr id="tfoot-row"></tr></tfoot>
+    </table>
+  </div>
+
+  <div id="sheet-root" class="sheet-root" hidden>
+    <div id="sheet-backdrop" class="sheet-backdrop"></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="จัดการล็อต">
+      <div class="sheet-grip" aria-hidden="true"></div>
+      <div class="sheet-head">
+        <h2 id="sheet-title"></h2>
+        <b id="sheet-profit"></b>
+      </div>
+
+      <div id="sheet-menu" class="sheet-menu">
+        <button type="button" id="act-detail" class="btn">ดูรายละเอียดทั้งหมด</button>
+        <button type="button" id="act-edit" class="btn btn-edit">แก้ไข</button>
+        <button type="button" id="act-delete" class="btn btn-danger">ลบ</button>
+        <button type="button" id="act-close" class="btn btn-close">ปิด</button>
+      </div>
+
+      <div id="sheet-detail" class="detail" hidden>
+        <dl id="detail-list"></dl>
+        <button type="button" class="btn" data-back>กลับ</button>
+      </div>
+
+      <div id="sheet-confirm" class="confirm" hidden>
+        <p>ยืนยันการลบล็อตนี้? การลบไม่สามารถย้อนกลับได้</p>
+        <div>
+          <button type="button" class="btn" data-back>ยกเลิก</button>
+          <button type="button" id="act-confirm-delete" class="btn btn-delete">ลบล็อต</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import '../scripts/data';
+</script>

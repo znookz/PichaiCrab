@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eff5f5;--surface:#ffffff;--calc:#e2eeed;--ink:#0a2a2e;--muted:#4a6468;--line:#cddcdc;--line-strong:#8aa6a8;--teal:#0f4f57;--teal-2:#176872;--on-teal:#ffffff;--coral:#c63f28;--on-coral:#ffffff;--pos:#0a7440;--pos-bg:#dcf2e6;--neg:#bf2118;--neg-bg:#fde4e1;--shadow:0 1px 2px rgba(10,42,46,.08),0 4px 14px rgba(10,42,46,.06);--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--r:16px;--r-sm:12px;--fs-sm:14px;--fs-md:16px;--fs-lg:20px;--fs-xl:36px;--tap:48px;--tabh:64px}
+@media (prefers-color-scheme:dark){:root{--bg:#061a1d;--surface:#0d2b30;--calc:#143a40;--ink:#e6f2f1;--muted:#9bb8ba;--line:#1f4a50;--line-strong:#4d8187;--teal:#5fc4cc;--teal-2:#3aa3ad;--on-teal:#04262a;--coral:#ff7b63;--on-coral:#2b0b04;--pos:#52d68e;--pos-bg:#0f3a28;--neg:#ff8c82;--neg-bg:#4a1a17;--shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3)}}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;font-size:16px;line-height:1.5}
+input,button{font:inherit;color:inherit}
+input{outline:none}
+button:focus-visible,input:focus-visible,tr:focus-visible{outline:3px solid var(--coral);outline-offset:2px}
+a{color:var(--teal-2)}a:hover{color:var(--coral)}
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+</style>
+</helmet>
+<div style="min-height:100vh">
+<main style="max-width:{{ shellMax }};margin:0 auto;padding:var(--s4) var(--s4) {{ padBottom }}px;box-sizing:border-box">
+
+<sc-if value="{{ isRecord }}" hint-placeholder-val="{{ true }}">
+<h1 style="font-size:24px;line-height:1.3;margin:var(--s2) 0 var(--s4);font-weight:700;color:var(--teal)">บันทึกล็อตนำเข้า</h1>
+<sc-if value="{{ editing }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--neg-bg);border:1.5px solid var(--coral);border-radius:var(--r-sm);padding:var(--s3) var(--s4);margin-bottom:var(--s4)">
+<span style="font-weight:600">กำลังแก้ไขล็อตวันที่ {{ editingDate }}</span>
+<button onClick="{{ cancelEdit }}" style="min-height:var(--tap);padding:0 var(--s4);border-radius:var(--r-sm);border:1.5px solid var(--ink);background:var(--surface);font-weight:600;cursor:pointer">ยกเลิก</button>
+</div>
+</sc-if>
+<nav aria-label="ไปยังส่วนของฟอร์ม" style="position:sticky;top:0;z-index:10;margin:0 calc(-1 * var(--s4)) var(--s3);padding:var(--s2) var(--s4);background:var(--bg);border-bottom:1px solid var(--line)">
+<div style="display:flex;gap:var(--s2)">
+<sc-for list="{{ jumps }}" as="j" hint-placeholder-count="5">
+<button onClick="{{ j.go }}" aria-current="{{ j.cur }}" style="flex:{{ j.flex }};min-width:var(--tap);min-height:var(--tap);padding:0 var(--s2);border-radius:99px;border:1.5px solid var(--teal);font-weight:700;cursor:pointer;background:{{ j.bg }};color:{{ j.fg }}">{{ j.label }}</button>
+</sc-for>
+</div>
+</nav>
+<div style="display:flex;flex-direction:column;gap:var(--s4)">
+<section aria-label="ข้อมูลทั่วไป" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s4);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:var(--s4)">
+<div style="display:flex;flex-direction:column;gap:6px">
+<label for="f-date" style="font-weight:600">วันที่</label>
+<input id="f-date" type="date" value="{{ f.date }}" onChange="{{ setDate }}" style="min-height:52px;box-sizing:border-box;padding:0 14px;background:var(--surface);border:1.5px solid var(--line-strong);border-radius:var(--r-sm);font-size:18px;width:100%">
+</div>
+</section>
+
+<sc-for list="{{ sections }}" as="sec" hint-placeholder-count="3">
+<section id="s-{{ sec.letter }}" aria-labelledby="sec-{{ sec.letter }}" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s4);box-shadow:var(--shadow)">
+<header style="display:flex;align-items:center;gap:var(--s3);margin-bottom:var(--s4)">
+<span aria-hidden="true" style="flex:none;width:36px;height:36px;border-radius:50%;background:var(--teal);color:var(--on-teal);display:flex;align-items:center;justify-content:center;font-weight:700">{{ sec.letter }}</span>
+<h2 id="sec-{{ sec.letter }}" style="margin:0;font-size:18px;line-height:1.3;font-weight:700">{{ sec.title }}</h2>
+</header>
+<div style="display:flex;flex-direction:column;gap:var(--s4)">
+<sc-for list="{{ sec.rows }}" as="row" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2)">
+<label for="f-{{ row.key }}" style="font-weight:600">{{ row.label }}</label>
+<sc-if value="{{ row.isCalc }}"><span style="flex:none;font-size:12px;font-weight:600;color:var(--muted);background:var(--calc);border-radius:99px;padding:1px 10px">คำนวณอัตโนมัติ</span></sc-if>
+</div>
+<sc-if value="{{ row.isInput }}">
+<div style="position:relative;display:flex;align-items:center;min-height:52px;box-sizing:border-box;background:var(--surface);border:1.5px solid var(--line-strong);border-radius:var(--r-sm);padding:0 14px;gap:var(--s2)">
+<input id="f-{{ row.key }}" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="{{ row.value }}" onChange="{{ row.onInput }}" aria-invalid="{{ row.hasErr }}" style="flex:1;min-width:0;border:0;background:transparent;font-size:20px;font-weight:600;text-align:right;padding:10px 0;font-variant-numeric:tabular-nums">
+<span aria-hidden="true" style="flex:none;min-width:28px;color:var(--muted);font-weight:600">{{ row.suffix }}</span>
+<sc-if value="{{ row.hasErr }}"><div style="position:absolute;inset:-1.5px;border:2.5px solid var(--neg);border-radius:var(--r-sm);pointer-events:none"></div></sc-if>
+</div>
+<sc-if value="{{ row.hasErr }}"><p role="alert" style="margin:0;color:var(--neg);font-size:var(--fs-sm);font-weight:600">{{ row.err }}</p></sc-if>
+</sc-if>
+<sc-if value="{{ row.isCalc }}">
+<div style="display:flex;align-items:center;justify-content:flex-end;gap:var(--s2);min-height:52px;box-sizing:border-box;background:var(--calc);border:1.5px dashed var(--line-strong);border-radius:var(--r-sm);padding:0 14px;opacity:{{ calcOpacity }}">
+<output id="f-{{ row.key }}" style="font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--teal)">{{ row.value }}</output>
+<span aria-hidden="true" style="flex:none;min-width:28px;color:var(--muted);font-weight:600">{{ row.suffix }}</span>
+</div>
+</sc-if>
+<sc-if value="{{ row.hasHint }}"><p style="margin:0;font-size:var(--fs-sm);color:var(--muted)">{{ row.hint }}</p></sc-if>
+</div>
+</sc-for>
+</div>
+</section>
+</sc-for>
+
+<section id="s-res" aria-labelledby="res-h" style="border:2px solid {{ resBorder }};border-radius:var(--r);background:var(--surface);padding:var(--s4);box-shadow:var(--shadow)">
+<sc-if value="{{ stale }}"><p role="status" style="margin:0 0 var(--s3);display:inline-block;background:var(--neg-bg);color:var(--ink);border:1.5px solid var(--coral);border-radius:99px;padding:2px 14px;font-weight:600;font-size:var(--fs-sm)">ข้อมูลเปลี่ยน กดคำนวณใหม่</p></sc-if>
+<div style="opacity:{{ calcOpacity }}">
+<h2 id="res-h" style="margin:0;font-size:var(--fs-md);font-weight:600;color:var(--muted)">สรุปกำไรส่วนต่างล็อตนี้ (฿)</h2>
+<p style="margin:var(--s1) 0 var(--s3);font-size:var(--fs-xl);line-height:1.2;font-weight:700;font-variant-numeric:tabular-nums;color:{{ profitColor }}">{{ res.profit }}</p>
+<dl style="margin:0;display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)">
+<div style="display:flex;justify-content:space-between;gap:var(--s3);padding:10px 0;border-bottom:1px solid var(--line)"><dt style="color:var(--muted)">1. ค่าดำเนินการเวียดนาม</dt><dd style="margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">{{ res.a }}<span style="display:block;font-size:var(--fs-sm);font-weight:400;color:var(--muted)">{{ res.ak }}</span></dd></div>
+<div style="display:flex;justify-content:space-between;gap:var(--s3);padding:10px 0;border-bottom:1px solid var(--line)"><dt style="color:var(--muted)">2. ค่าดำเนินการไทย</dt><dd style="margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">{{ res.b }}<span style="display:block;font-size:var(--fs-sm);font-weight:400;color:var(--muted)">{{ res.bk }}</span></dd></div>
+<div style="display:flex;justify-content:space-between;gap:var(--s3);padding:10px 0;border-bottom:1px solid var(--line)"><dt style="color:var(--muted)">3. ส่วนต่างเรท</dt><dd style="margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:{{ spreadColor }}">{{ res.c }}<span style="display:block;font-size:var(--fs-sm);font-weight:400;color:var(--muted)">{{ res.ck }}</span></dd></div>
+</dl>
+<div style="margin-top:var(--s3);background:var(--calc);border-radius:var(--r-sm);padding:var(--s3) var(--s4);display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums">
+<div style="display:flex;justify-content:space-between;gap:var(--s3)"><span style="color:var(--muted)">ค่าดำเนินการรวม (1 + 2)</span><span style="font-weight:700">{{ res.ab }}</span></div>
+<div style="display:flex;justify-content:space-between;gap:var(--s3)"><span style="color:var(--muted)">น้ำหนักปู</span><span style="font-weight:700">{{ res.kg }}</span></div>
+<div style="display:flex;justify-content:space-between;gap:var(--s3)"><span style="color:var(--muted)">กำไรรวมต่อกก.</span><span style="font-weight:700;color:{{ profitColor }}">{{ res.pk }}</span></div>
+</div>
+</div>
+</section>
+
+<div style="position:sticky;bottom:calc(var(--tabh) + env(safe-area-inset-bottom,0px));z-index:5;display:flex;gap:var(--s3);padding:var(--s3) 0;background:linear-gradient(to top,var(--bg) 78%,transparent)">
+<button onClick="{{ doCalc }}" style="flex:1;min-height:56px;border-radius:var(--r-sm);border:2px solid var(--teal);background:var(--surface);color:var(--teal);font-weight:700;font-size:18px;cursor:pointer" style-active="transform:scale(.98)">คำนวณ</button>
+<button onClick="{{ save }}" disabled="{{ saveDisabled }}" style="flex:1;min-height:56px;border-radius:var(--r-sm);border:2px solid var(--coral);background:var(--coral);color:var(--on-coral);font-weight:700;font-size:18px;cursor:{{ saveCursor }};opacity:{{ saveOpacity }}">บันทึก</button>
+</div>
+
+</div>
+</sc-if>
+
+<sc-if value="{{ isDash }}" hint-placeholder-val="{{ false }}">
+<h1 style="font-size:24px;line-height:1.3;margin:var(--s2) 0 var(--s4);font-weight:700;color:var(--teal)">แดชบอร์ด</h1>
+<div role="group" aria-label="ช่วงเวลา" style="display:flex;gap:var(--s2);margin-bottom:var(--s4)">
+<sc-for list="{{ chips }}" as="c" hint-placeholder-count="4">
+<button onClick="{{ c.onClick }}" aria-pressed="{{ c.on }}" style="flex:1;min-height:var(--tap);border-radius:99px;border:1.5px solid var(--teal);font-weight:600;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{ showLoading }}">
+<div aria-busy="true" aria-label="กำลังโหลด" style="display:flex;flex-direction:column;gap:var(--s3)">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)">
+<div style="height:92px;border-radius:var(--r);background:var(--line);animation:pulse 1.2s ease-in-out infinite"></div>
+<div style="height:92px;border-radius:var(--r);background:var(--line);animation:pulse 1.2s ease-in-out infinite"></div>
+<div style="height:92px;border-radius:var(--r);background:var(--line);animation:pulse 1.2s ease-in-out infinite"></div>
+<div style="height:92px;border-radius:var(--r);background:var(--line);animation:pulse 1.2s ease-in-out infinite"></div>
+</div>
+<div style="height:260px;border-radius:var(--r);background:var(--line);animation:pulse 1.2s ease-in-out infinite"></div>
+<div style="height:260px;border-radius:var(--r);background:var(--line);animation:pulse 1.2s ease-in-out infinite"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showEmpty }}">
+<div style="text-align:center;border:2px dashed var(--line-strong);border-radius:var(--r);padding:var(--s6) var(--s4);display:flex;flex-direction:column;align-items:center;gap:var(--s3)">
+<div aria-hidden="true" style="width:56px;height:56px;border-radius:50%;border:3px solid var(--line-strong)"></div>
+<p style="margin:0;font-weight:700;font-size:18px">ยังไม่มีล็อตในช่วงนี้</p>
+<p style="margin:0;color:var(--muted)">เลือกช่วงเวลาอื่น หรือบันทึกล็อตใหม่</p>
+<button onClick="{{ goRecord }}" style="min-height:var(--tap);padding:0 var(--s5);border-radius:var(--r-sm);border:0;background:var(--coral);color:var(--on-coral);font-weight:700;cursor:pointer">ไปหน้าบันทึก</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ showContent }}">
+<div style="display:flex;flex-direction:column;gap:var(--s4)">
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)">
+<sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s4);box-shadow:var(--shadow);min-width:0">
+<div style="font-size:var(--fs-sm);color:var(--muted);font-weight:600">{{ k.label }}</div>
+<div style="font-size:clamp(18px,5.4vw,26px);font-weight:700;font-variant-numeric:tabular-nums;margin-top:var(--s1);color:{{ k.color }};overflow-wrap:anywhere">{{ k.value }}</div>
+</div>
+</sc-for>
+</div>
+
+<section aria-labelledby="c1-h" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s4);box-shadow:var(--shadow)">
+<h2 id="c1-h" style="margin:0;font-size:var(--fs-md);font-weight:700">กำไรต่อล็อต (฿)</h2>
+<div style="display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0;font-size:var(--fs-sm);color:var(--muted)">
+<span style="display:flex;align-items:center;gap:6px"><span aria-hidden="true" style="width:14px;height:14px;border-radius:3px;background:var(--pos)"></span>กำไร</span>
+<span style="display:flex;align-items:center;gap:6px"><span aria-hidden="true" style="width:14px;height:14px;border-radius:3px;background:var(--neg)"></span>ขาดทุน (เครื่องหมาย −)</span>
+</div>
+<svg role="img" aria-label="กราฟแท่งกำไรต่อล็อต" viewBox="0 0 {{ cw }} 220" style="width:100%;height:auto;display:block;font-family:inherit">
+<sc-for list="{{ bar.grid }}" as="g"><g><line x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}" style="stroke:var(--line)" stroke-width="1"></line><text x="{{ g.tx }}" y="{{ g.ty }}" text-anchor="end" style="fill:var(--muted)" font-size="11">{{ g.label }}</text></g></sc-for>
+<line x1="{{ bar.zx1 }}" x2="{{ bar.zx2 }}" y1="{{ bar.zy }}" y2="{{ bar.zy }}" style="stroke:var(--line-strong)" stroke-width="1.5"></line>
+<sc-for list="{{ bar.bars }}" as="b"><g><rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="3" style="fill:{{ b.fill }}"></rect><text x="{{ b.cx }}" y="{{ b.ty }}" text-anchor="middle" font-size="11" font-weight="600" style="fill:{{ b.fill }}">{{ b.val }}</text></g></sc-for>
+<sc-for list="{{ bar.xl }}" as="x"><text x="{{ x.x }}" y="212" text-anchor="middle" font-size="11" style="fill:var(--muted)">{{ x.t }}</text></sc-for>
+</svg>
+</section>
+
+<section aria-labelledby="c2-h" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s4);box-shadow:var(--shadow)">
+<h2 id="c2-h" style="margin:0;font-size:var(--fs-md);font-weight:700">เรท 1 เทียบเรท 2 (₫ ต่อ 1 ฿)</h2>
+<div style="display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0;font-size:var(--fs-sm);color:var(--muted)">
+<span style="display:flex;align-items:center;gap:6px"><svg width="26" height="12" aria-hidden="true"><line x1="0" y1="6" x2="26" y2="6" style="stroke:var(--teal)" stroke-width="2.5"></line><circle cx="13" cy="6" r="4" style="fill:var(--teal)"></circle></svg>เรท 1 (เส้นทึบ ●)</span>
+<span style="display:flex;align-items:center;gap:6px"><svg width="26" height="12" aria-hidden="true"><line x1="0" y1="6" x2="26" y2="6" style="stroke:var(--coral)" stroke-width="2.5" stroke-dasharray="5 3"></line><rect x="9" y="2" width="8" height="8" style="fill:var(--coral)"></rect></svg>เรท 2 (เส้นประ ■)</span>
+</div>
+<svg role="img" aria-label="กราฟเส้นเรท 1 เทียบเรท 2" viewBox="0 0 {{ cw }} 220" style="width:100%;height:auto;display:block;font-family:inherit">
+<sc-for list="{{ line.grid }}" as="g"><g><line x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}" style="stroke:var(--line)" stroke-width="1"></line><text x="{{ g.tx }}" y="{{ g.ty }}" text-anchor="end" style="fill:var(--muted)" font-size="11">{{ g.label }}</text></g></sc-for>
+<path d="{{ line.d1 }}" fill="none" stroke-width="2.5" stroke-linejoin="round" style="stroke:var(--teal)"></path>
+<path d="{{ line.d2 }}" fill="none" stroke-width="2.5" stroke-linejoin="round" stroke-dasharray="6 4" style="stroke:var(--coral)"></path>
+<sc-for list="{{ line.p1 }}" as="p"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="4" style="fill:var(--teal)"></circle></sc-for>
+<sc-for list="{{ line.p2 }}" as="p"><rect x="{{ p.sx }}" y="{{ p.sy }}" width="8" height="8" style="fill:var(--coral)"></rect></sc-for>
+<sc-for list="{{ line.ends }}" as="e"><text x="{{ e.x }}" y="{{ e.y }}" font-size="11" font-weight="700" style="fill:{{ e.fill }}">{{ e.t }}</text></sc-for>
+<sc-for list="{{ line.xl }}" as="x"><text x="{{ x.x }}" y="212" text-anchor="middle" font-size="11" style="fill:var(--muted)">{{ x.t }}</text></sc-for>
+</svg>
+</section>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ isRaw }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--s3);margin:var(--s2) 0 var(--s4)">
+<h1 style="font-size:24px;line-height:1.3;margin:0;font-weight:700;color:var(--teal)">ข้อมูลดิบ</h1>
+<button onClick="{{ exportCsv }}" style="min-height:var(--tap);padding:0 var(--s4);border-radius:var(--r-sm);border:2px solid var(--teal);background:var(--surface);color:var(--teal);font-weight:700;cursor:pointer">ส่งออก CSV</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:var(--s3);align-items:flex-end;margin-bottom:var(--s4)">
+<div style="flex:1 1 140px;display:flex;flex-direction:column;gap:6px">
+<label for="d-from" style="font-weight:600;font-size:var(--fs-sm)">ตั้งแต่วันที่</label>
+<input id="d-from" type="date" value="{{ from }}" onChange="{{ setFrom }}" style="min-height:var(--tap);box-sizing:border-box;padding:0 12px;background:var(--surface);border:1.5px solid var(--line-strong);border-radius:var(--r-sm);width:100%">
+</div>
+<div style="flex:1 1 140px;display:flex;flex-direction:column;gap:6px">
+<label for="d-to" style="font-weight:600;font-size:var(--fs-sm)">ถึงวันที่</label>
+<input id="d-to" type="date" value="{{ to }}" onChange="{{ setTo }}" style="min-height:var(--tap);box-sizing:border-box;padding:0 12px;background:var(--surface);border:1.5px solid var(--line-strong);border-radius:var(--r-sm);width:100%">
+</div>
+</div>
+<sc-if value="{{ rangeErr }}"><p role="alert" style="margin:calc(-1 * var(--s2)) 0 var(--s3);color:var(--neg);font-weight:600;font-size:var(--fs-sm)">วันที่เริ่มต้องไม่เกินวันสิ้นสุด</p></sc-if>
+
+<sc-if value="{{ rawEmpty }}">
+<div style="text-align:center;border:2px dashed var(--line-strong);border-radius:var(--r);padding:var(--s6) var(--s4)">
+<p style="margin:0;font-weight:700;font-size:18px">ไม่พบข้อมูลที่ตรงกับตัวกรอง</p>
+<p style="margin:var(--s1) 0 0;color:var(--muted)">ลองเปลี่ยนคำค้นหาหรือช่วงวันที่</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ showCards }}">
+<div style="display:flex;flex-direction:column;gap:var(--s3)">
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+<button onClick="{{ r.open }}" aria-label="เปิดเมนูล็อต {{ r.date }}" style="text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s4);box-shadow:var(--shadow);cursor:pointer;display:flex;flex-direction:column;gap:var(--s3)">
+<div style="display:flex;justify-content:space-between;gap:var(--s3);align-items:baseline"><span style="font-weight:700;font-size:18px">{{ r.date }}</span><span style="color:var(--muted);font-variant-numeric:tabular-nums">{{ r.kg }} กก.</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s2) var(--s4);font-variant-numeric:tabular-nums">
+<div><div style="font-size:var(--fs-sm);color:var(--muted)">ยอดเก็บลูกค้า ฿</div><div style="font-weight:600">{{ r.billed }}</div></div>
+<div><div style="font-size:var(--fs-sm);color:var(--muted)">ยอดโอน ฿</div><div style="font-weight:600">{{ r.transfer }}</div></div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:var(--s2)"><span style="font-size:var(--fs-sm);color:var(--muted)">กำไร ฿</span><span style="font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;color:{{ r.color }}">{{ r.profit }}</span></div>
+</button>
+</sc-for>
+</div>
+<div style="margin-top:var(--s4);background:var(--teal);color:var(--on-teal);border-radius:var(--r);padding:var(--s4)">
+<div style="font-weight:700;margin-bottom:var(--s2)">สรุปตามตัวกรอง · {{ sum.n }} ล็อต</div>
+<div style="display:grid;grid-template-columns:1fr auto;gap:4px var(--s4);font-variant-numeric:tabular-nums"><span>น้ำหนักรวม</span><span style="text-align:right">{{ sum.kg }} กก.</span><span>ยอดเก็บลูกค้ารวม</span><span style="text-align:right">{{ sum.billed }} ฿</span><span>ยอดโอนรวม</span><span style="text-align:right">{{ sum.transfer }} ฿</span><span style="font-weight:700">กำไรรวม</span><span style="text-align:right;font-weight:700">{{ sum.profit }} ฿</span></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showTable }}">
+<div style="overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow)">
+<table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:15px">
+<caption style="position:absolute;left:-9999px">ตารางล็อตนำเข้า</caption>
+<thead><tr>
+<sc-for list="{{ cols }}" as="c" hint-placeholder-count="10"><th scope="col" aria-sort="{{ c.aria }}" style="padding:0;background:var(--calc);border-bottom:2px solid var(--line-strong);text-align:{{ c.align }}"><button onClick="{{ c.onSort }}" style="width:100%;min-height:var(--tap);padding:0 12px;background:none;border:0;font-weight:700;text-align:{{ c.align }};cursor:pointer;white-space:nowrap">{{ c.label }} {{ c.arrow }}</button></th></sc-for>
+</tr></thead>
+<tbody>
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+<tr onClick="{{ r.open }}" onKeyDown="{{ r.key }}" tabindex="0" style="cursor:pointer" style-hover="background:var(--calc)">
+<sc-for list="{{ r.cells }}" as="cell"><td style="padding:12px;text-align:{{ cell.align }};color:{{ cell.color }};font-weight:{{ cell.weight }};white-space:nowrap;border-bottom:1px solid var(--line)">{{ cell.text }}</td></sc-for>
+</tr>
+</sc-for>
+</tbody>
+<tfoot><tr>
+<sc-for list="{{ foot }}" as="cell"><td style="padding:14px 12px;text-align:{{ cell.align }};color:{{ cell.color }};font-weight:700;white-space:nowrap;background:var(--calc);border-top:2px solid var(--line-strong)">{{ cell.text }}</td></sc-for>
+</tr></tfoot>
+</table>
+</div>
+</sc-if>
+</sc-if>
+</main>
+
+<nav aria-label="เมนูหลัก" style="position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line-strong);padding-bottom:env(safe-area-inset-bottom,0px)">
+<div style="max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);height:var(--tabh)">
+<button onClick="{{ goRecord }}" aria-current="{{ cur.record }}" style="background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:600;font-size:13px;color:{{ tabC.record }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M12 8v8M8 12h8"></path></svg>บันทึก</button>
+<button onClick="{{ goDash }}" aria-current="{{ cur.dash }}" style="background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:600;font-size:13px;color:{{ tabC.dash }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6"></path></svg>แดชบอร์ด</button>
+<button onClick="{{ goRaw }}" aria-current="{{ cur.raw }}" style="background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:600;font-size:13px;color:{{ tabC.raw }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M9.5 10v9.5"></path></svg>ข้อมูลดิบ</button>
+</div>
+</nav>
+
+<sc-if value="{{ sheetOpen }}">
+<div style="position:fixed;inset:0;z-index:40;display:flex;align-items:{{ sheetAlign }};justify-content:center">
+<div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(3,20,23,.6)"></div>
+<div role="dialog" aria-modal="true" aria-label="จัดการล็อต" style="position:relative;width:100%;max-width:{{ sheetMax }};max-height:88vh;overflow-y:auto;background:var(--surface);border-radius:var(--r) var(--r) {{ sheetBottomR }} {{ sheetBottomR }};padding:var(--s4) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom,0px));box-sizing:border-box;box-shadow:0 -8px 30px rgba(0,0,0,.3)">
+<div aria-hidden="true" style="width:44px;height:5px;border-radius:3px;background:var(--line-strong);margin:0 auto var(--s3)"></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--s3);margin-bottom:var(--s3)">
+<h2 style="margin:0;font-size:20px">ล็อต {{ sh.date }}</h2>
+<span style="font-weight:700;font-variant-numeric:tabular-nums;color:{{ sh.color }}">{{ sh.profit }} ฿</span>
+</div>
+<sc-if value="{{ sheetMenu }}">
+<div style="display:flex;flex-direction:column;gap:var(--s2)">
+<button onClick="{{ showDetail }}" style="min-height:56px;border-radius:var(--r-sm);border:1.5px solid var(--line-strong);background:var(--surface);font-weight:600;font-size:17px;cursor:pointer;text-align:left;padding:0 var(--s4)">ดูรายละเอียดทั้งหมด</button>
+<button onClick="{{ startEdit }}" style="min-height:56px;border-radius:var(--r-sm);border:1.5px solid var(--teal);background:var(--surface);color:var(--teal);font-weight:600;font-size:17px;cursor:pointer;text-align:left;padding:0 var(--s4)">แก้ไข</button>
+<button onClick="{{ askDelete }}" style="min-height:56px;border-radius:var(--r-sm);border:1.5px solid var(--neg);background:var(--surface);color:var(--neg);font-weight:600;font-size:17px;cursor:pointer;text-align:left;padding:0 var(--s4)">ลบ</button>
+<button onClick="{{ closeSheet }}" style="min-height:var(--tap);border:0;background:none;color:var(--muted);font-weight:600;cursor:pointer">ปิด</button>
+</div>
+</sc-if>
+<sc-if value="{{ sheetDetail }}">
+<dl style="margin:0;display:flex;flex-direction:column">
+<sc-for list="{{ detail }}" as="d">
+<div style="display:flex;justify-content:space-between;gap:var(--s3);padding:10px 0;border-bottom:1px solid var(--line)"><dt style="color:var(--muted)">{{ d.k }}</dt><dd style="margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;color:{{ d.color }}">{{ d.v }}</dd></div>
+</sc-for>
+</dl>
+<button onClick="{{ backMenu }}" style="margin-top:var(--s3);width:100%;min-height:var(--tap);border-radius:var(--r-sm);border:1.5px solid var(--line-strong);background:var(--surface);font-weight:600;cursor:pointer">กลับ</button>
+</sc-if>
+<sc-if value="{{ sheetConfirm }}">
+<p style="margin:0 0 var(--s4);font-size:18px;font-weight:600">ยืนยันการลบล็อตนี้? การลบไม่สามารถย้อนกลับได้</p>
+<div style="display:flex;gap:var(--s3)">
+<button onClick="{{ backMenu }}" style="flex:1;min-height:56px;border-radius:var(--r-sm);border:1.5px solid var(--line-strong);background:var(--surface);font-weight:700;cursor:pointer">ยกเลิก</button>
+<button onClick="{{ doDelete }}" style="flex:1;min-height:56px;border-radius:var(--r-sm);border:0;background:var(--neg);color:var(--surface);font-weight:700;cursor:pointer">ลบล็อต</button>
+</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ toast }}">
+<div role="status" style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabh) + 100px);z-index:50;background:var(--ink);color:var(--bg);padding:14px 22px;border-radius:99px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.35);max-width:calc(100vw - 32px)">{{ toast }}</div>
+</sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:900}}">
+const TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const KEYS=['kg','crab','vnFee','rate1','thFee','rate2'];
+const NAMES={kg:'จำนวนปู',crab:'ค่าปูฝั่งเวียดนาม',vnFee:'ค่าดำเนินการเวียดนาม',rate1:'เรทที่ 1',thFee:'ค่าดำเนินการไทย',rate2:'เรทที่ 2'};
+const nf0=new Intl.NumberFormat('en-US',{maximumFractionDigits:0});
+const nf2=new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const nfv=new Intl.NumberFormat('en-US',{maximumFractionDigits:2});
+const nfk=new Intl.NumberFormat('en-US',{maximumFractionDigits:1});
+const fmt0=n=>nf0.format(Math.round(n)), fmt2=n=>nf2.format(Math.round(n*100)/100+0), fmtV=n=>nfv.format(n);
+const sgn=n=>(n<0?'−':'+')+fmt2(Math.abs(n));
+const kfmt=v=>v===0?'0':(v<0?'−':'')+nfk.format(Math.abs(v)/1000)+'k';
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const isoAgo=n=>{const t=new Date();t.setDate(t.getDate()-n);return iso(t)};
+const fmtDate=s=>{const [y,m,d]=s.split('-').map(Number);return d+' '+TH_MON[m-1]+' '+(y+543)};
+const shortDate=s=>{const [,m,d]=s.split('-').map(Number);return d+'/'+m};
+const POS='var(--pos)',NEG='var(--neg)';
+const col=n=>n<0?NEG:POS;
+
+function calcLot(i){
+  const vnFeeTot=i.vnFee*i.kg,thFeeTot=i.thFee*i.kg;
+  const net=i.crab-vnFeeTot;
+  const thbConv=i.crab/i.rate1;
+  const billed=thbConv+thFeeTot;
+  const transfer=net/i.rate2;
+  return {vnFeeTot,thFeeTot,net,thbConv,billed,transfer,profit:billed-transfer,vnFeeThb:vnFeeTot/i.rate2,spread:i.crab/i.rate1-i.crab/i.rate2};
+}
+
+const DB={lots:[
+{d:1,kg:820,crab:172200000,vn:3444000,r1:751,r2:763,th:8200,note:'ปูไข่ ตลาดทะเลไทย'},
+{d:4,kg:1350,crab:283500000,vn:4252500,r1:749,r2:761,th:12000,note:'ปูม้า เกรด A'},
+{d:6,kg:410,crab:86100000,vn:2583000,r1:752,r2:764,th:3500,note:'ปูทะเล ลูกค้าประจำ'},
+{d:9,kg:1980,crab:396000000,vn:7920000,r1:748,r2:760,th:19000,note:'ล็อตใหญ่ งานเลี้ยง'},
+{d:13,kg:240,crab:45600000,vn:2280000,r1:753,r2:766,th:1500,note:''},
+{d:17,kg:960,crab:201600000,vn:4032000,r1:750,r2:762,th:9000,note:'ปูไข่'},
+{d:22,kg:1500,crab:322500000,vn:9675000,r1:746,r2:758,th:15000,note:'ปูม้า ส่งร้านอาหาร'},
+{d:27,kg:610,crab:128100000,vn:1281000,r1:751,r2:764,th:5000,note:''},
+{d:33,kg:205,crab:41000000,vn:1640000,r1:754,r2:767,th:1000,note:'ล็อตเล็ก ผู้ขายใหม่'},
+{d:41,kg:1120,crab:235200000,vn:4704000,r1:749,r2:763,th:11000,note:'ปูทะเล'},
+{d:48,kg:770,crab:154000000,vn:1540000,r1:770,r2:755,th:1000,note:'เรทเปลี่ยนก่อนโอน'},
+{d:56,kg:1740,crab:365400000,vn:7308000,r1:747,r2:759,th:18000,note:'ปูม้า ไซส์ใหญ่'},
+{d:66,kg:530,crab:111300000,vn:3339000,r1:752,r2:765,th:4000,note:''},
+{d:77,kg:1280,crab:268800000,vn:5376000,r1:750,r2:761,th:13000,note:'ปูไข่ ล็อตเช้า'},
+{d:88,kg:350,crab:70000000,vn:2800000,r1:755,r2:767,th:2500,note:''}
+].map((l,i)=>({id:i+1,date:isoAgo(l.d),note:l.note,kg:l.kg,crab:l.crab,vnFee:Math.round(l.vn/l.kg),rate1:l.r1,thFee:Math.max(1,Math.round(l.th/l.kg)),rate2:l.r2}))};
+
+const enrich=l=>({...l,...calcLot(l)});
+const num=s=>s===''||s==null?NaN:parseFloat(String(s).replace(/,/g,''));
+function fmtInput(raw,dec){
+  let s=raw.replace(dec?/[^0-9.]/g:/[^0-9]/g,'');
+  let [i,...r]=s.split('.');
+  i=i.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return dec&&r.length?i+'.'+r.join('').slice(0,2):i;
+}
+function validate(f,attempted){
+  const e={};
+  KEYS.forEach(k=>{
+    const v=num(f[k]);
+    if(f[k]===''){if(attempted)e[k]='กรุณากรอก'+NAMES[k];return;}
+    if((k==='kg'||k==='crab'||k==='rate1'||k==='rate2')&&!(v>0))e[k]=(k[0]==='r'?'เรท':NAMES[k])+'ต้องมากกว่า 0';
+  });
+  if(!e.vnFee&&!e.crab&&f.vnFee!==''&&f.crab!==''&&num(f.vnFee)*num(f.kg)>num(f.crab))e.vnFee='ค่าดำเนินการรวมต้องไม่เกินค่าปูทั้งหมด';
+  return e;
+}
+function niceTicks(min,max,n){
+  const span=(max-min)||1,raw=span/n,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p;
+  const step=(m<=1?1:m<=2?2:m<=5?5:10)*p,lo=Math.floor(min/step+1e-9)*step,hi=Math.ceil(max/step-1e-9)*step,t=[];
+  for(let v=lo;v<=hi+step/2;v+=step)t.push(Math.round(v*1e6)/1e6);
+  return t;
+}
+function barChart(rows,W){
+  const px=42,pr=8,pt=22,pb=26,H=220,pw=W-px-pr,ph=H-pt-pb,n=rows.length;
+  const vals=rows.map(r=>r.profit),tk=niceTicks(Math.min(0,...vals),Math.max(0,...vals),4);
+  const mn=tk[0],mx=tk[tk.length-1],y=v=>pt+ph*(mx-v)/((mx-mn)||1);
+  const slot=pw/n,bw=Math.min(slot*0.62,36),every=Math.ceil(n/(W>400?10:6));
+  return {
+    grid:tk.map(v=>({x1:px,x2:W-pr,y:y(v),tx:px-6,ty:y(v)+4,label:kfmt(v)})),zx1:px,zx2:W-pr,zy:y(0),
+    bars:rows.map((r,i)=>{const cx=px+slot*(i+.5),v=r.profit,top=Math.min(y(v),y(0)),h=Math.max(Math.abs(y(v)-y(0)),2);
+      return {x:cx-bw/2,y:top,w:bw,h,cx,fill:col(v),val:n<=(W>400?12:8)?kfmt(v):'',ty:v<0?top+h+12:top-5}}),
+    xl:rows.map((r,i)=>({x:px+slot*(i+.5),t:i%every===0?shortDate(r.date):''}))
+  };
+}
+function lineChart(rows,W){
+  const px=42,pr=34,pt=16,pb=26,H=220,pw=W-px-pr,ph=H-pt-pb,n=rows.length;
+  const all=rows.flatMap(r=>[r.rate1,r.rate2]),tk=niceTicks(Math.min(...all)-1,Math.max(...all)+1,4);
+  const mn=tk[0],mx=tk[tk.length-1],y=v=>pt+ph*(mx-v)/((mx-mn)||1),x=i=>n===1?px+pw/2:px+pw*i/(n-1);
+  const path=k=>rows.map((r,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(r[k]).toFixed(1)).join(' ');
+  const every=Math.ceil(n/(W>400?10:6)),L=rows[n-1],up=L.rate2>=L.rate1;
+  return {
+    grid:tk.map(v=>({x1:px,x2:W-pr,y:y(v),tx:px-6,ty:y(v)+4,label:fmtV(v)})),d1:path('rate1'),d2:path('rate2'),
+    p1:rows.map((r,i)=>({x:x(i),y:y(r.rate1)})),p2:rows.map((r,i)=>({sx:x(i)-4,sy:y(r.rate2)-4})),
+    ends:[{x:x(n-1)+8,y:y(L.rate1)+(up?14:-2),t:fmtV(L.rate1),fill:'var(--teal)'},{x:x(n-1)+8,y:y(L.rate2)+(up?-2:14),t:fmtV(L.rate2),fill:'var(--coral)'}],
+    xl:rows.map((r,i)=>({x:x(i),t:i%every===0?shortDate(r.date):''}))
+  };
+}
+
+class Component extends DCLogic{
+  state={nav:'0',tab:'record',f:{date:iso(new Date()),note:'',kg:'',crab:'',vnFee:'',rate1:'',thFee:'',rate2:''},attempted:false,calc:null,stale:false,
+    lots:DB.lots,editingId:null,toast:'',period:'all',loading:false,q:'',from:'',to:'',sortKey:'date',sortDir:'desc',
+    sheet:null,sheetMode:'menu',wide:typeof window!=='undefined'&&window.innerWidth>=768};
+  componentDidMount(){
+    this._r=()=>{const w=window.innerWidth>=768;if(w!==this.state.wide)this.setState({wide:w})};window.addEventListener('resize',this._r);
+    this._s=()=>{if(this.state.tab!=='record')return;let a='0';
+      ['0','A','B','C','res'].forEach(k=>{const el=document.getElementById('s-'+k);if(el&&el.getBoundingClientRect().top<=90)a=k});
+      if(window.innerHeight+window.scrollY>=document.body.scrollHeight-4)a='res';
+      if(a!==this.state.nav)this.setState({nav:a})};
+    window.addEventListener('scroll',this._s,{passive:true});
+  }
+  componentWillUnmount(){window.removeEventListener('resize',this._r);window.removeEventListener('scroll',this._s)}
+  jump=k=>()=>{const el=document.getElementById('s-'+k);if(!el)return;window.scrollTo({top:Math.max(0,el.getBoundingClientRect().top+window.scrollY-72),behavior:'smooth'});this.setState({nav:k})};
+  go=t=>{window.scrollTo(0,0);this.setState({tab:t,loading:t==='dashboard'});if(t==='dashboard')this.skel()};
+  skel=()=>{this.setState({loading:true});clearTimeout(this._sk);this._sk=setTimeout(()=>this.setState({loading:false}),600)};
+  say=m=>{this.setState({toast:m});clearTimeout(this._t);this._t=setTimeout(()=>this.setState({toast:''}),2600)};
+  touch=(patch)=>this.setState(st=>({f:{...st.f,...patch},...(st.calc?{stale:true}:{})}));
+  setField=k=>e=>{
+    const el=e.target,raw=el.value,pos=el.selectionStart??raw.length;
+    const keep=raw.slice(0,pos).replace(/[^0-9.]/g,'').length,val=fmtInput(raw,k!=='crab'&&k!=='vnFee');
+    this.setState(st=>({f:{...st.f,[k]:val},...(st.calc?{stale:true}:{})}),()=>{
+      let c=0,i=0;while(i<val.length&&c<keep){if(/[0-9.]/.test(val[i]))c++;i++}
+      try{el.setSelectionRange(i,i)}catch(_){}
+    });
+  };
+  doCalc=()=>{
+    const {f}=this.state,errs=validate(f,true),bad=KEYS.find(k=>errs[k]);
+    if(bad){this.setState({attempted:true});const el=document.getElementById('f-'+bad);el&&el.focus();return}
+    const input={};KEYS.forEach(k=>input[k]=num(f[k]));
+    this.setState({attempted:true,calc:{input,res:calcLot(input)},stale:false});
+  };
+  save=()=>{
+    const {calc,stale,f,editingId,lots}=this.state;if(!calc||stale)return;
+    const lot={id:editingId||Date.now(),date:f.date,note:f.note.trim(),...calc.input};
+    this.setState({lots:editingId?lots.map(l=>l.id===editingId?lot:l):[...lots,lot],
+      f:{...f,note:'',kg:'',crab:''},calc:null,stale:false,attempted:false,editingId:null});
+    this.say(editingId?'อัปเดตล็อตเรียบร้อย':'บันทึกล็อตเรียบร้อย');
+  };
+  cancelEdit=()=>this.setState({editingId:null,calc:null,stale:false,attempted:false,f:{...this.state.f,note:'',kg:'',crab:''}});
+  openSheet=id=>()=>this.setState({sheet:id,sheetMode:'menu'});
+  startEdit=()=>{
+    const l=this.state.lots.find(x=>x.id===this.state.sheet);if(!l)return;
+    const d=k=>fmtInput(String(l[k]),k!=='crab'&&k!=='vnFee');
+    window.scrollTo(0,0);
+    this.setState({sheet:null,tab:'record',editingId:l.id,calc:null,stale:false,attempted:false,f:{date:l.date,note:l.note,kg:d('kg'),crab:d('crab'),vnFee:d('vnFee'),rate1:d('rate1'),thFee:d('thFee'),rate2:d('rate2')}});
+  };
+  doDelete=()=>{this.setState(st=>({lots:st.lots.filter(l=>l.id!==st.sheet),sheet:null}));this.say('ลบล็อตเรียบร้อย')};
+  sortBy=k=>()=>this.setState(st=>({sortKey:k,sortDir:st.sortKey===k&&st.sortDir==='desc'?'asc':'desc'}));
+
+  renderVals(){
+    const s=this.state,wide=s.wide,f=s.f,tab=s.tab;
+    const all=s.lots.map(enrich).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:b.id-a.id);
+    const errs=validate(f,s.attempted);
+    const R=s.calc?s.calc.res:null,I=s.calc?s.calc.input:null;
+    const dash='—';
+    const cv=(fn)=>R?fn(R):dash;
+    const inRow=(key,label,suffix,hint)=>({key,label,suffix,hint,hasHint:!!hint,isInput:true,isCalc:false,value:f[key],hasErr:!!errs[key],err:errs[key]||'',onInput:this.setField(key)});
+    const caRow=(key,label,suffix,hint,value)=>({key,label,suffix,hint,hasHint:!!hint,isInput:false,isCalc:true,value,hasErr:false,err:'',onInput:null});
+    const sections=[
+      {letter:'0',title:'ค่าตั้งต้น (ไม่ค่อยเปลี่ยน)',rows:[
+        inRow('rate1','เรทเงินเวียดนาม 1 (₫ ต่อ 1 ฿)','₫/฿'),inRow('rate2','เรทเงินเวียดนาม 2 (₫ ต่อ 1 ฿)','₫/฿'),
+        inRow('vnFee','ค่าดำเนินการฝั่งเวียดนาม (₫ ต่อ กก.)','₫/กก.','คิดเป็นยอดรวม = ต่อ กก. × จำนวนกก.'),inRow('thFee','ค่าดำเนินการฝั่งไทย (฿ ต่อ กก.)','฿/กก.','รายได้ที่บวกในบิลลูกค้า ไม่ใช่ต้นทุน คิดรวม = ต่อ กก. × จำนวนกก.')]},
+      {letter:'A',title:'ฝั่งเวียดนาม (VND)',rows:[
+        inRow('kg','จำนวนปูทั้งหมด (กก.)','กก.'),inRow('crab','ค่าปูฝั่งเวียดนามทั้งหมด (₫)','₫'),
+        caRow('net','รวมค่าปู − ค่าดำเนินการ (₫)','₫','ไว้จ่ายคู่ค้าเวียดนามตอนท้าย',cv(r=>fmt0(r.net)))]},
+      {letter:'B',title:'คิดฝั่งไทย (เรทที่ 1)',rows:[
+        caRow('thbConv','คิดเป็นเงินไทย (฿)','฿','คิดจากค่าปูเท่านั้น ไม่รวมค่าดำเนินการเวียดนาม',cv(r=>fmt2(r.thbConv))),
+        caRow('billed','รวมค่าปู + ค่าดำเนินการไทย (฿)','฿','ยอดที่เก็บเงินลูกค้า',cv(r=>fmt2(r.billed)))]},
+      {letter:'C',title:'จ่ายเวียดนาม (เรทที่ 2)',rows:[
+        caRow('transfer','ยอดที่ต้องโอนเป็นเงินไทย (฿)','฿','(ค่าปู − ค่าดำเนินการ) ÷ เรท 2',cv(r=>fmt2(r.transfer)))]}
+    ];
+    let res={profit:dash,a:dash,b:dash,c:dash,ak:'',bk:'',ck:'',ab:dash,kg:dash,pk:dash},profitColor='var(--muted)',spreadColor='var(--ink)',resBorder='var(--line)';
+    if(R){
+      const r2=n=>Math.round(n*100)/100,a=r2(R.vnFeeThb),b=r2(R.thFeeTot),t=r2(R.profit),c=r2(t-a-b);
+      const kg=I.kg,pk=v=>sgn(v/kg)+' ฿/กก.';
+      res={profit:sgn(t),a:fmt2(a),b:fmt2(b),c:sgn(c),ak:pk(a),bk:pk(b),ck:pk(c),ab:fmt2(a+b)+' ฿',kg:fmtV(kg)+' กก.',pk:pk(t)};profitColor=col(R.profit);spreadColor=col(c);resBorder=col(R.profit);
+    }
+    const recent=all.slice(0,5).map(l=>({date:fmtDate(l.date),kg:fmtV(l.kg),profit:sgn(l.profit),color:col(l.profit)}));
+    const saveDisabled=!s.calc||s.stale;
+    const editLot=s.editingId&&s.lots.find(l=>l.id===s.editingId);
+
+    const today=new Date();today.setHours(0,0,0,0);
+    const cut={'7':()=>{const d=new Date(today);d.setDate(d.getDate()-6);return iso(d)},month:()=>iso(new Date(today.getFullYear(),today.getMonth(),1)),'90':()=>{const d=new Date(today);d.setMonth(d.getMonth()-3);return iso(d)},all:()=>'0000-00-00'}[s.period]();
+    const pl=all.filter(l=>l.date>=cut).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.id-b.id);
+    const tot=(a,k)=>a.reduce((x,l)=>x+l[k],0);
+    const cw=wide?640:340;
+    const periods=[['7','7 วัน'],['month','เดือนนี้'],['90','3 เดือน'],['all','ทั้งหมด']];
+    const chips=periods.map(([k,label])=>({label,on:s.period===k,bg:s.period===k?'var(--teal)':'var(--surface)',fg:s.period===k?'var(--on-teal)':'var(--teal)',onClick:()=>{this.setState({period:k});this.skel()}}));
+    const kpis=[{label:'จำนวนล็อต',value:String(pl.length),color:'var(--ink)'},{label:'น้ำหนักรวม (กก.)',value:fmtV(tot(pl,'kg')),color:'var(--ink)'},
+      {label:'ยอดเก็บลูกค้ารวม (฿)',value:fmt2(tot(pl,'billed')),color:'var(--ink)'},{label:'กำไรรวม (฿)',value:sgn(tot(pl,'profit')),color:col(tot(pl,'profit'))}];
+    const hasData=pl.length>0;
+
+    const q=s.q.trim().toLowerCase(),rangeErr=!!(s.from&&s.to&&s.from>s.to);
+    let rr=all.filter(l=>(!q||l.note.toLowerCase().includes(q))&&(!s.from||l.date>=s.from)&&(!s.to||l.date<=s.to));
+    const dir=s.sortDir==='asc'?1:-1;
+    rr=rr.sort((a,b)=>{const x=a[s.sortKey],y=b[s.sortKey];return (x<y?-1:x>y?1:0)*dir||b.id-a.id});
+    const sum={n:rr.length,kg:fmtV(tot(rr,'kg')),billed:fmt2(tot(rr,'billed')),transfer:fmt2(tot(rr,'transfer')),profit:sgn(tot(rr,'profit'))};
+    const C=[['date','วันที่',l=>fmtDate(l.date),'left'],['kg','กก.',l=>fmtV(l.kg)],['crab','ค่าปู ₫',l=>fmt0(l.crab)],['vnFee','ค่าดำเนินการ VN ₫/กก.',l=>fmt0(l.vnFee)],['rate1','เรท 1',l=>fmtV(l.rate1)],
+      ['thFee','ค่าดำเนินการไทย ฿/กก.',l=>fmt2(l.thFee)],['billed','ยอดเก็บลูกค้า ฿',l=>fmt2(l.billed)],['rate2','เรท 2',l=>fmtV(l.rate2)],['transfer','ยอดโอน ฿',l=>fmt2(l.transfer)],['profit','กำไร ฿',l=>sgn(l.profit)]];
+    const cols=C.map(([key,label,,al])=>({label,align:al||'right',arrow:s.sortKey===key?(s.sortDir==='asc'?'▲':'▼'):'',aria:s.sortKey===key?(s.sortDir==='asc'?'ascending':'descending'):'none',onSort:this.sortBy(key)}));
+    const open=l=>this.openSheet(l.id);
+    const rows=rr.map(l=>({date:fmtDate(l.date),kg:fmtV(l.kg),billed:fmt2(l.billed),transfer:fmt2(l.transfer),profit:sgn(l.profit),color:col(l.profit),open:open(l),
+      key:e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();this.openSheet(l.id)()}},
+      cells:C.map(([key,,fn,al])=>({text:fn(l),align:al||'right',color:key==='profit'?col(l.profit):'var(--ink)',weight:key==='profit'||key==='date'?700:400}))}));
+    const foot=[{text:sum.n+' ล็อต',align:'left'},{text:sum.kg},{text:''},{text:''},{text:''},{text:''},{text:sum.billed},{text:''},{text:sum.transfer},{text:sum.profit,color:col(tot(rr,'profit'))}].map(c=>({align:'right',color:'var(--ink)',...c}));
+
+    const sl=all.find(l=>l.id===s.sheet);
+    const sh=sl?{date:fmtDate(sl.date),profit:sgn(sl.profit),color:col(sl.profit)}:{date:'',profit:'',color:'var(--ink)'};
+    const detail=sl?[['วันที่',fmtDate(sl.date)],['จำนวนปู (กก.)',fmtV(sl.kg)],['ค่าปูทั้งหมด (₫)',fmt0(sl.crab)],['ค่าดำเนินการ VN (₫ ต่อ กก.)',fmt0(sl.vnFee)],['ค่าดำเนินการ VN รวม (₫)',fmt0(sl.vnFeeTot)],['รวมค่าปู − ค่าดำเนินการ (₫)',fmt0(sl.net)],
+      ['เรท 1 (₫ ต่อ ฿)',fmtV(sl.rate1)],['คิดเป็นเงินไทย (฿)',fmt2(sl.thbConv)],['ค่าดำเนินการไทย (฿ ต่อ กก.)',fmt2(sl.thFee)],['ค่าดำเนินการไทย รวม (฿)',fmt2(sl.thFeeTot)],['ยอดเก็บลูกค้า (฿)',fmt2(sl.billed)],['เรท 2 (₫ ต่อ ฿)',fmtV(sl.rate2)],['ยอดโอน (฿)',fmt2(sl.transfer)],
+      ['กำไรจากค่าดำเนินการ VN (฿)',fmt2(sl.vnFeeThb)],['กำไรจากค่าดำเนินการไทย (฿)',fmt2(sl.thFeeTot)],['กำไรจากส่วนต่างเรท (฿)',sgn(sl.spread),col(sl.spread)],['กำไรรวม (฿)',sgn(sl.profit),col(sl.profit)]].map(([k,v,c])=>({k,v,color:c||'var(--ink)'})):[];
+
+    const tc=t=>tab===t?'var(--coral)':'var(--muted)',cur=t=>tab===t?'page':'false';
+    const jumps=[['0','ตั้งต้น'],['A','A'],['B','B'],['C','C'],['res','สรุป']].map(([k,label])=>({label,go:this.jump(k),cur:s.nav===k?'true':'false',flex:label.length>2?'1.6':'1',bg:s.nav===k?'var(--teal)':'var(--surface)',fg:s.nav===k?'var(--on-teal)':'var(--teal)'}));
+    return {
+      jumps,f,sections,res,profitColor,spreadColor,resBorder,recent,stale:s.stale,calcOpacity:s.stale?0.4:1,
+      saveDisabled,saveOpacity:saveDisabled?0.4:1,saveCursor:saveDisabled?'not-allowed':'pointer',
+      editing:!!editLot,editingDate:editLot?fmtDate(editLot.date):'',cancelEdit:this.cancelEdit,
+      setDate:e=>this.touch({date:e.target.value}),setNote:e=>this.touch({note:e.target.value}),doCalc:this.doCalc,save:this.save,
+      isRecord:tab==='record',isDash:tab==='dashboard',isRaw:tab==='raw',
+      shellMax:tab==='raw'&&wide?'1180px':tab==='dashboard'&&wide?'720px':'480px',padBottom:tab==='record'?100:110,
+      tabC:{record:tc('record'),dash:tc('dashboard'),raw:tc('raw')},cur:{record:cur('record'),dash:cur('dashboard'),raw:cur('raw')},
+      goRecord:()=>this.go('record'),goDash:()=>this.go('dashboard'),goRaw:()=>this.go('raw'),
+      chips,kpis,cw,showLoading:s.loading,showEmpty:!s.loading&&!hasData,showContent:!s.loading&&hasData,
+      bar:hasData?barChart(pl,cw):{grid:[],bars:[],xl:[],zx1:0,zx2:0,zy:0},line:hasData?lineChart(pl,cw):{grid:[],xl:[],p1:[],p2:[],ends:[],d1:'',d2:''},
+      q:s.q,from:s.from,to:s.to,setQ:e=>this.setState({q:e.target.value}),setFrom:e=>this.setState({from:e.target.value}),setTo:e=>this.setState({to:e.target.value}),rangeErr,
+      rawEmpty:!rr.length,showCards:!wide&&rr.length>0,showTable:wide&&rr.length>0,rows,cols,foot,sum,
+      exportCsv:()=>this.say('ส่งออก CSV (ตัวอย่าง UI เท่านั้น)'),
+      sheetOpen:!!sl,sh,detail,sheetMenu:s.sheetMode==='menu',sheetDetail:s.sheetMode==='detail',sheetConfirm:s.sheetMode==='confirm',
+      sheetAlign:wide?'center':'flex-end',sheetMax:wide?'480px':'560px',sheetBottomR:wide?'var(--r)':'0',
+      closeSheet:()=>this.setState({sheet:null}),showDetail:()=>this.setState({sheetMode:'detail'}),backMenu:()=>this.setState({sheetMode:'menu'}),
+      askDelete:()=>this.setState({sheetMode:'confirm'}),startEdit:this.startEdit,doDelete:this.doDelete,toast:s.toast
+    };
+  }
+}
+
+</script>
+</body>
+</html>

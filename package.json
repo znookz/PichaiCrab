@@ -1,0 +1,21 @@
+{
+  "name": "pichai-crab",
+  "type": "module",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro build && wrangler dev",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "deploy": "astro build && wrangler deploy"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.4.4",
+    "astro": "^7.4.5"
+  },
+  "devDependencies": {
+    "wrangler": "^4.156.2"
+  }
+}
