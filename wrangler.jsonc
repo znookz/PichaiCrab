@@ -1,12 +1,18 @@
 {
-  "name": "pichai-crab",
-  "compatibility_date": "2026-11-01",
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "pichai-crab",
-      "database_id": "00000000-0000-0000-0000-000000000000",
-      "migrations_dir": "migrations"
-    }
-  ]
+	"name": "pichai-crab",
+	"compatibility_date": "2026-11-01",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "pichai-crab",
+			"database_id": "fe84eee3-5627-49c4-98c4-50cb6a0836be",
+			"migrations_dir": "migrations"
+		},
+		{
+			"binding": "pichai_crab",
+			"database_name": "pichai-crab",
+			"database_id": "fe84eee3-5627-49c4-98c4-50cb6a0836be",
+			"remote": true
+		}
+	]
 }
